@@ -15,3 +15,13 @@ createItems(3)
 val testStr = "Item-50037->473.76, Item-90394->891.27"
 
 val testMap = testStr.split(",").map(_.split("->")).map { case Array(k,v) => (k, v.toDouble)}.toMap
+
+val payload = "CHECK"
+
+val status = if (!payload.equalsIgnoreCase("check")) {
+  payload
+} else if (r.nextGaussian().abs > 0.01) {
+  "APPROVED"
+} else {
+  "DECLINED"
+}

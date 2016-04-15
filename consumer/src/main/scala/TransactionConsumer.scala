@@ -32,25 +32,12 @@ import org.apache.spark.rdd.RDD
 import java.sql.Timestamp
 import java.util.Calendar
 
-case class Transaction(cc_no:String,
-                       cc_provider: String,
-                       year: Int,
-                       month: Int,
-                       day: Int,
-                       hour: Int,
-                       min: Int,
-                       txn_time: Timestamp,
-                       txn_id: String,
-                       merchant: String,
-                       location: String,
-                       items: Map[String, Double],
-                       amount: Double,
-                       status: String)
-
 // This implementation uses the Kafka Direct API supported in Spark 1.4+
 object TransactionConsumer extends App {
 
-  val r = scala.util.Random
+  // have to declare this as @transient lazy as we are using it in the
+  //
+  @transient lazy val r = scala.util.Random
 
   /*
    * Get runtime properties from application.conf
@@ -72,11 +59,25 @@ object TransactionConsumer extends App {
   val ssc = new StreamingContext(sc, Milliseconds(1000))
   ssc.checkpoint(appName)
 
-  val kafkaTopics = Set(systemConfig.getString("TransactionConsumer.kafkaTopic"))
+  val kafkaTopics = Set(systemConfig.getString("TransactionConsumer.kafkaDataTopic"))
   val kafkaParams = Map[String, String]("metadata.broker.list" -> systemConfig.getString("TransactionConsumer.kafkaHost"))
 
   val kafkaStream = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParams, kafkaTopics)
 
+  case class Transaction(cc_no:String,
+                         cc_provider: String,
+                         year: Int,
+                         month: Int,
+                         day: Int,
+                         hour: Int,
+                         min: Int,
+                         txn_time: Timestamp,
+                         txn_id: String,
+                         merchant: String,
+                         location: String,
+//                         items: Map[String, Double],
+                         amount: Double,
+                         status: String)
   kafkaStream
     .foreachRDD {
       (message: RDD[(String, String)], batchTime: Time) => {
@@ -99,35 +100,25 @@ object TransactionConsumer extends App {
           val txn_id = payload(3)
           val merchant = payload(4)
           val location = payload(5)
-          println(s"Kafka Message Paylod(6): ${payload(6)}")
-          val items = payload(6).split(",").map(_.split("->")).map { case Array(k, v) => (k, v.toDouble) }.toMap
+
+          // not including items as the map data type get resolved in the search engine as a dynamic field
+          // which will eventually blow out the Solr index from a sizing perspective.
+          //val items = payload(6).split(",").map(_.split("->")).map { case Array(k, v) => (k, v.toDouble) }.toMap
           val amount = payload(7).toDouble
+          val initStatus = payload(8)
           //
           // This need to be updated to include more evaluation rules.
           //
-          val status = if (payload(8) != "CHECK") {
-            payload(8)
-          } else if (0.01 > r.nextGaussian()) {
-            "APPOVED"
+          val status = if (!initStatus.equalsIgnoreCase("CHECK")) {
+            initStatus
+          } else if (r.nextGaussian().abs > 0.005) {
+            s"APPROVED"
           } else {
-            "DECLINED"
+            s"DECLINED"
           }
 
-          Transaction(cc_no, cc_provider, year, month, day, hour, min, txn_time, txn_id, merchant, location, items, amount, status)
-        }).toDF("cc_no",
-                "cc_provider",
-                "year",
-                "month",
-                "day",
-                "hour",
-                "min",
-                "txn_time",
-                "txn_id",
-                "merchant",
-                "location",
-                "items",
-                "amount",
-                "status")
+          Transaction(cc_no, cc_provider, year, month, day, hour, min, txn_time, txn_id, merchant, location, amount, status)
+        }).toDF("cc_no", "cc_provider", "year", "month", "day", "hour", "min","txn_time", "txn_id", "merchant", "location", "amount", "status")
 
         df
           .write
@@ -138,6 +129,23 @@ object TransactionConsumer extends App {
 
         df.show(5)
         println(s"${df.count()} rows processed.")
+
+        val nowInMillis = System.currentTimeMillis()
+        val recSec = new Timestamp((nowInMillis / 1000) * 1000)
+        val recTS = new Timestamp(nowInMillis)
+        val totalTxn = df.count()
+        val declinedTxn = df.filter("status = 'DECLINED'").count()
+        val approvedTxn = df.filter("status = 'APPROVED'").count()
+
+        val dfCount = sc.makeRDD(Seq((recSec, recTS, totalTxn, approvedTxn, declinedTxn)))
+                        .toDF("epoch_sec", "ts", "total_txn", "approved_txn", "declined_txn")
+        dfCount.show()
+        dfCount
+          .write
+          .format("org.apache.spark.sql.cassandra")
+          .mode(SaveMode.Append)
+          .options(Map("keyspace" -> "rtfap", "table" -> "txn_count_sec"))
+          .save()
       }
     }
 

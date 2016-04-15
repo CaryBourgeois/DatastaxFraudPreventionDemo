@@ -77,7 +77,7 @@ class produceTransactions(brokers: String, topic: String, numTransPerWait : Int)
 
     val (items, amount) = createItems(r.nextInt(maxNumItemsminusOne) + 1)
 
-    val status = "CHECK"
+    val status = s"CHECK"
 
     return s"${cc_no};${cc_provider};${txn_time.toString};${txn_id};${merchant};${location};${items};${amount};${status}"
   }

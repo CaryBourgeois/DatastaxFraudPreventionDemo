@@ -35,6 +35,7 @@ Start local copy of Kafka
 Create the topic we will use for the demo
 
   * `<kafka home dir>bin/kafka-topics.sh --zookeeper localhost:2181 --create --replication-factor 1 --partitions 1 --topic NewTransactions`
+  * `<kafka home dir>bin/kafka-topics.sh --zookeeper localhost:2181 --create --replication-factor 1 --partitions 1 --topic AggregatesPerSec`
 
 Validate the topic was created. 
 
@@ -45,6 +46,7 @@ Validate the topic was created.
 Delete the topic. (Note: The server.properties file must contain `delete.topic.enable=true` for this to work)
 
   * `<kafka home dir>bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic NewTransactions`
+  * `<kafka home dir>bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic AggregatesPerSec`
   
 Show all of the messages in a topic from the beginning
 
@@ -100,4 +102,6 @@ This assumes you already have Kafka and DSE up and running and configured as in 
   * From the root directory of the project start the consumer app
   
     `dse spark-submit --packages org.apache.spark:spark-streaming-kafka-assembly_2.10:1.4.1 --class com.datastax.demo.fraudprevention.TransactionConsumer consumer/target/scala-2.10/consumer_2.10-0.1.jar`
+    
+    `dse spark-submit --packages org.apache.spark:spark-streaming-kafka-assembly_2.10:1.4.1 --class com.datastax.demo.fraudprevention.TransactionAggregator consumer/target/scala-2.10/consumer_2.10-0.1.jar`
   
