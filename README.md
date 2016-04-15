@@ -37,7 +37,7 @@ Create the topic we will use for the demo
   * `<kafka home dir>bin/kafka-topics.sh --zookeeper localhost:2181 --create --replication-factor 1 --partitions 1 --topic NewTransactions`
   * `<kafka home dir>bin/kafka-topics.sh --zookeeper localhost:2181 --create --replication-factor 1 --partitions 1 --topic AggregatesPerSec`
 
-Validate the topic was created. 
+Validate the topics were created. 
 
   * `<kafka home dir>bin/kafka-topics.sh --zookeeper localhost:2181 --list`
   
