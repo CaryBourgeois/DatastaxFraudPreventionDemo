@@ -1,4 +1,8 @@
+ALTER TABLE rtfap.transactions
+add date_text text;
 
+ALTER TABLE rtfap.transactions
+with default_time_to_live = 86400;
 
 CREATE TABLE IF NOT EXISTS rtfap.txn_count_sec (
 	epoch_sec bigint,

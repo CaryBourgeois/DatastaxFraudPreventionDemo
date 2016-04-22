@@ -101,7 +101,7 @@ This assumes you already have Kafka and DSE up and running and configured as in 
   
   * From the root directory of the project start the consumer app
   
-    `dse spark-submit --packages org.apache.spark:spark-streaming-kafka-assembly_2.10:1.4.1 --class com.datastax.demo.fraudprevention.TransactionConsumer consumer/target/scala-2.10/consumer_2.10-0.1.jar`
+    `dse spark-submit --master spark://127.0.0.1:7077 --packages org.apache.spark:spark-streaming-kafka-assembly_2.10:1.4.1 --class com.datastax.demo.fraudprevention.TransactionConsumer consumer/target/scala-2.10/consumer_2.10-0.1.jar`
     
     `dse spark-submit --packages org.apache.spark:spark-streaming-kafka-assembly_2.10:1.4.1 --class com.datastax.demo.fraudprevention.TransactionAggregator consumer/target/scala-2.10/consumer_2.10-0.1.jar`
   

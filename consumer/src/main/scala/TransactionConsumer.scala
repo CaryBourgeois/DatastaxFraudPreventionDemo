@@ -77,7 +77,8 @@ object TransactionConsumer extends App {
                          location: String,
 //                         items: Map[String, Double],
                          amount: Double,
-                         status: String)
+                         status: String,
+                         date_test: String)
   kafkaStream
     .foreachRDD {
       (message: RDD[(String, String)], batchTime: Time) => {
@@ -117,8 +118,10 @@ object TransactionConsumer extends App {
             s"DECLINED"
           }
 
-          Transaction(cc_no, cc_provider, year, month, day, hour, min, txn_time, txn_id, merchant, location, amount, status)
-        }).toDF("cc_no", "cc_provider", "year", "month", "day", "hour", "min","txn_time", "txn_id", "merchant", "location", "amount", "status")
+          val date_text = f"$year%04d$month%02d$day%02d"
+
+          Transaction(cc_no, cc_provider, year, month, day, hour, min, txn_time, txn_id, merchant, location, amount, status, date_text)
+        }).toDF("cc_no", "cc_provider", "year", "month", "day", "hour", "min","txn_time", "txn_id", "merchant", "location", "amount", "status", "date_text")
 
         df
           .write

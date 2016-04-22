@@ -18,6 +18,7 @@
 /**
   * Created by carybourgeois on 3/17/16.
   */
+package com.datastax.demo.fraudprevention
 
 import java.sql.Timestamp
 import java.util.Properties
@@ -28,6 +29,9 @@ import com.typesafe.config.ConfigFactory
 import kafka.producer.{KeyedMessage, Producer, ProducerConfig}
 
 class produceTransactions(brokers: String, topic: String, numTransPerWait : Int) extends Actor {
+
+  val merchList = new Merchant
+  val locList = new Location
 
   val r = scala.util.Random
 
@@ -72,8 +76,8 @@ class produceTransactions(brokers: String, topic: String, numTransPerWait : Int)
     val txn_time = new Timestamp(System.currentTimeMillis())
     val txn_id = randomUUID.toString
 
-    val merchant = s"Merchant ${r.nextInt(numMerchants)}"
-    val location = s"Location ${r.nextInt(numMerchanrLocations)}"
+    val merchant = merchList.nextMerchant()
+    val location = locList.nextLocation()
 
     val (items, amount) = createItems(r.nextInt(maxNumItemsminusOne) + 1)
 
@@ -133,9 +137,9 @@ object TransactionProducer extends App {
   /*
    * Message Loop
    */
-  var numTransCreated = 0
+  var numTransCreated : Long = 0
   val stopTime = System.currentTimeMillis() + (runDurationSeconds * 1000)
-  while(System.currentTimeMillis() < stopTime) {
+  while(runDurationSeconds < 0 || System.currentTimeMillis() < stopTime) {
     messageActor ! "send"
 
     numTransCreated += numTransPerWait
