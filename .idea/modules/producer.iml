@@ -32,7 +32,6 @@
     <orderEntry type="library" name="SBT: net.jpountz.lz4:lz4:1.2.0:jar" level="project" />
     <orderEntry type="library" name="SBT: net.sf.jopt-simple:jopt-simple:3.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.apache.zookeeper:zookeeper:3.4.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.slf4j:slf4j-api:1.7.6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.xerial.snappy:snappy-java:1.1.1.7:jar" level="project" />
     <orderEntry type="module-library">
@@ -58,5 +57,6 @@
     <orderEntry type="library" name="SBT: org.apache.kafka:kafka-clients:0.9.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.apache.kafka:kafka_2.10:0.9.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.slf4j:slf4j-log4j12:1.7.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.5:jar" level="project" />
   </component>
 </module>

@@ -156,7 +156,6 @@
     <orderEntry type="library" scope="PROVIDED" name="SBT: org.objenesis:objenesis:1.2:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="SBT: org.roaringbitmap:RoaringBitmap:0.4.5:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="SBT: org.scala-lang:scala-compiler:2.10.4:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.10.5:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="SBT: org.scala-lang:scalap:2.10.0:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="SBT: org.scalamacros:quasiquotes_2.10:2.0.1:jar" level="project" />
@@ -193,5 +192,6 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.5:jar" level="project" />
   </component>
 </module>

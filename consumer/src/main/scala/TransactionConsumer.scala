@@ -46,7 +46,7 @@ object TransactionConsumer extends App {
 
   val appName = systemConfig.getString("TransactionConsumer.sparkAppName")
 
-  //val pctTransactionToDecline = systemConfig.getDouble("TransactionConsumer.pctTransactionToDecline")
+  val pctTransactionToDecline = systemConfig.getDouble("TransactionConsumer.pctTransactionToDecline")
 
   val conf = new SparkConf()
     .set("spark.cores.max", "2")
@@ -116,7 +116,7 @@ object TransactionConsumer extends App {
           //
           val status = if (!initStatus.equalsIgnoreCase("CHECK")) {
             initStatus
-          } else if (r.nextGaussian().abs > 0.1/2.0) {
+          } else if (r.nextGaussian().abs > pctTransactionToDecline/2.0) {
             s"APPROVED"
           } else {
             s"DECLINED"
