@@ -46,6 +46,8 @@ object TransactionConsumer extends App {
 
   val appName = systemConfig.getString("TransactionConsumer.sparkAppName")
 
+  //val pctTransactionToDecline = systemConfig.getDouble("TransactionConsumer.pctTransactionToDecline")
+
   val conf = new SparkConf()
     .set("spark.cores.max", "2")
     .set("spark.executor.memory", "512M")
@@ -75,6 +77,7 @@ object TransactionConsumer extends App {
                          txn_id: String,
                          merchant: String,
                          location: String,
+                         country: String,
 //                         items: Map[String, Double],
                          amount: Double,
                          status: String,
@@ -101,18 +104,19 @@ object TransactionConsumer extends App {
           val txn_id = payload(3)
           val merchant = payload(4)
           val location = payload(5)
+          val country = payload(6)
 
           // not including items as the map data type get resolved in the search engine as a dynamic field
           // which will eventually blow out the Solr index from a sizing perspective.
           //val items = payload(6).split(",").map(_.split("->")).map { case Array(k, v) => (k, v.toDouble) }.toMap
-          val amount = payload(7).toDouble
-          val initStatus = payload(8)
+          val amount = payload(8).toDouble
+          val initStatus = payload(9)
           //
           // This need to be updated to include more evaluation rules.
           //
           val status = if (!initStatus.equalsIgnoreCase("CHECK")) {
             initStatus
-          } else if (r.nextGaussian().abs > 0.005) {
+          } else if (r.nextGaussian().abs > 0.1/2.0) {
             s"APPROVED"
           } else {
             s"DECLINED"
@@ -120,8 +124,8 @@ object TransactionConsumer extends App {
 
           val date_text = f"$year%04d$month%02d$day%02d"
 
-          Transaction(cc_no, cc_provider, year, month, day, hour, min, txn_time, txn_id, merchant, location, amount, status, date_text)
-        }).toDF("cc_no", "cc_provider", "year", "month", "day", "hour", "min","txn_time", "txn_id", "merchant", "location", "amount", "status", "date_text")
+          Transaction(cc_no, cc_provider, year, month, day, hour, min, txn_time, txn_id, merchant, location, country, amount, status, date_text)
+        }).toDF("cc_no", "cc_provider", "year", "month", "day", "hour", "min","txn_time", "txn_id", "merchant", "location", "country", "amount", "status", "date_text")
 
         df
           .write
@@ -132,6 +136,8 @@ object TransactionConsumer extends App {
 
         df.show(5)
         println(s"${df.count()} rows processed.")
+
+        df.collect()
 
         val nowInMillis = System.currentTimeMillis()
         val recSec = new Timestamp((nowInMillis / 1000) * 1000)

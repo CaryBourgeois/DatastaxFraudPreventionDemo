@@ -77,13 +77,13 @@ class produceTransactions(brokers: String, topic: String, numTransPerWait : Int)
     val txn_id = randomUUID.toString
 
     val merchant = merchList.nextMerchant()
-    val location = locList.nextLocation()
+    val (country, location) = locList.nextLocation()
 
     val (items, amount) = createItems(r.nextInt(maxNumItemsminusOne) + 1)
 
     val status = s"CHECK"
 
-    return s"${cc_no};${cc_provider};${txn_time.toString};${txn_id};${merchant};${location};${items};${amount};${status}"
+    return s"${cc_no};${cc_provider};${txn_time.toString};${txn_id};${merchant};${location};${country};${items};${amount};${status}"
   }
 
   def createItems (numItems: Int) : (String, String) = {
