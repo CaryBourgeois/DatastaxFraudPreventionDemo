@@ -28,7 +28,7 @@ import akka.actor.{Actor, Props, ActorSystem}
 import com.typesafe.config.ConfigFactory
 import kafka.producer.{KeyedMessage, Producer, ProducerConfig}
 
-class produceTransactions(brokers: String, topic: String, numTransPerWait : Int) extends Actor {
+class produceTransactions(brokers: String, topic: String) extends Actor {
 
   val merchList = new Merchant
   val locList = new Location
@@ -37,8 +37,6 @@ class produceTransactions(brokers: String, topic: String, numTransPerWait : Int)
 
   val numProviders = 9999
   val numCards = 99999999
-  val numMerchants = 99999
-  val numMerchanrLocations = 9999
   val numUniqueItems = 99999
   val maxNumItemsminusOne = 4  // The Minus one is here because we will add one to the number to correct for the possibility of zero
 
@@ -55,8 +53,9 @@ class produceTransactions(brokers: String, topic: String, numTransPerWait : Int)
   }
 
   def receive = {
-    case "send" => {
-      val messages = for (sensor <- 1 to numTransPerWait ) yield {
+
+    case numTrans : Int => {
+      val messages = for (sensor <- 1 to numTrans ) yield {
         val str = createTransaction()
 
         new KeyedMessage[String, String](topic, str)
@@ -81,7 +80,7 @@ class produceTransactions(brokers: String, topic: String, numTransPerWait : Int)
 
     val (items, amount) = createItems(r.nextInt(maxNumItemsminusOne) + 1)
 
-    val status = s"CHECK"
+    val status = s"${r.nextInt(100)}"
 
     return s"${cc_no};${cc_provider};${txn_time.toString};${txn_id};${merchant};${location};${country};${items};${amount};${status}"
   }
@@ -113,16 +112,10 @@ object TransactionProducer extends App {
   println(s"kafkaTopic $kafkaTopic")
 
   /*
-   * Datastax Enterprise Properties
-   */
-  val dseConnectionString = systemConfig.getString("TransactionProducer.dseConnectionString")
-  println(s"dseConnectionString $dseConnectionString")
-
-  /*
    * Application Properties
    */
-  val numTransPerWait = systemConfig.getInt("TransactionProducer.numTransPerWait")
-  println(s"numTransPerWait $numTransPerWait")
+  val maxNumTransPerWait = systemConfig.getInt("TransactionProducer.maxNumTransPerWait")
+  println(s"maxNumTransPerWait $maxNumTransPerWait")
   val waitMillis = systemConfig.getLong("TransactionProducer.waitMillis")
   println(s"waitMillis $waitMillis")
   val runDurationSeconds = systemConfig.getLong("TransactionProducer.runDurationSeconds")
@@ -132,17 +125,21 @@ object TransactionProducer extends App {
    * Set up the Akka Actor
    */
   val system = ActorSystem("TransactionProducer")
-  val messageActor = system.actorOf(Props(new produceTransactions(kafkaHost, kafkaTopic, numTransPerWait)), name="genTransactions")
+  val messageActor = system.actorOf(Props(new produceTransactions(kafkaHost, kafkaTopic)), name="genTransactions")
 
   /*
    * Message Loop
    */
+  val r = scala.util.Random
   var numTransCreated : Long = 0
   val stopTime = System.currentTimeMillis() + (runDurationSeconds * 1000)
   while(runDurationSeconds < 0 || System.currentTimeMillis() < stopTime) {
-    messageActor ! "send"
 
-    numTransCreated += numTransPerWait
+    val numTrans = r.nextInt(maxNumTransPerWait) + 1
+
+    messageActor ! numTrans
+
+    numTransCreated += numTrans
 
     println(s"${numTransCreated} Transactions created.")
 

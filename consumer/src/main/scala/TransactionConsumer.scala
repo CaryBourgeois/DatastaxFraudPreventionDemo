@@ -20,7 +20,7 @@ package com.datastax.demo.fraudprevention
   * Created by carybourgeois on 10/30/15.
   */
 
-import java.util.{Random, GregorianCalendar, Calendar}
+import java.util.{GregorianCalendar, Calendar}
 
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.{SparkConf, SparkContext}
@@ -33,11 +33,6 @@ import java.sql.Timestamp
 
 // This implementation uses the Kafka Direct API supported in Spark 1.4+
 object TransactionConsumer extends App {
-  /*
-   * have to declare this as @transient lazy as we are using it in the streaming context
-   * and the scala Random is not re-entrant
-   */
-  //@transient lazy val r = scala.util.Random
 
   /*
    * Get runtime properties from application.conf
@@ -49,7 +44,10 @@ object TransactionConsumer extends App {
   val kafkaHost = systemConfig.getString("TransactionConsumer.kafkaHost")
   val kafkaDataTopic = systemConfig.getString("TransactionConsumer.kafkaDataTopic")
 
-  val pctTransactionToDecline = systemConfig.getDouble("TransactionConsumer.pctTransactionToDecline")
+  // this does not work in this example at this point as these vaialble appear to be out of scope for the
+  // map portion of the forEachRDD
+  //
+  val pctTransactionToDecline = systemConfig.getString("TransactionConsumer.pctTransactionToDecline")
 
   val dseKeyspace = systemConfig.getString("TransactionConsumer.dseKeyspace")
   val dseTable = systemConfig.getString("TransactionConsumer.dseTable")
@@ -111,24 +109,23 @@ object TransactionConsumer extends App {
           val merchant = payload(4)
           val location = payload(5)
           val country = payload(6)
+
           //
           // not including items as the map data type get resolved in the search engine as a dynamic field
           // which will eventually blow out the Solr index from a sizing perspective.
           //val items = payload(6).split(",").map(_.split("->")).map { case Array(k, v) => (k, v.toDouble) }.toMap
           //
           val amount = payload(8).toDouble
-          val initStatus = payload(9)
+
           //
           // In a real app this sould need to be updated to include more evaluation rules.
           //
-          @transient lazy val r = scala.util.Random
-          val status = if (!initStatus.equalsIgnoreCase("CHECK")) {
-            initStatus
-          } else if (r.nextInt(100) < (pctTransactionToDecline * 100).toInt) {
-            s"DECLINED"
-          } else {
-            s"APPROVED"
-          }
+          val initStatus = payload(9).toInt
+          val status = if (initStatus < 5) s"REJECTED" else s"APPROVED"
+//            status = s"DECLINED"
+//          } else {
+//            status = s"APPROVED"
+//          }
 
           val date_text = f"$year%04d$month%02d$day%02d"
 
@@ -151,7 +148,7 @@ object TransactionConsumer extends App {
         val recSec = new Timestamp((nowInMillis / 1000) * 1000)
         val recTS = new Timestamp(nowInMillis)
         val totalTxn = df.count()
-        val declinedTxn = df.filter("status = 'DECLINED'").count()
+        val declinedTxn = df.filter("status = 'REJECTED'").count()
         val approvedTxn = df.filter("status = 'APPROVED'").count()
 
         val dfCount = sc.makeRDD(Seq((recSec, recTS, totalTxn, approvedTxn, declinedTxn)))
