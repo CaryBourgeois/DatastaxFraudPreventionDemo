@@ -20,7 +20,7 @@ package com.datastax.demo.fraudprevention
   * Created by carybourgeois on 10/30/15.
   */
 
-import java.util.GregorianCalendar
+import java.util.{Random, GregorianCalendar, Calendar}
 
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.{SparkConf, SparkContext}
@@ -30,7 +30,6 @@ import org.apache.spark.streaming.kafka.KafkaUtils
 import kafka.serializer.StringDecoder
 import org.apache.spark.rdd.RDD
 import java.sql.Timestamp
-import java.util.Calendar
 
 // This implementation uses the Kafka Direct API supported in Spark 1.4+
 object TransactionConsumer extends App {
@@ -38,7 +37,7 @@ object TransactionConsumer extends App {
    * have to declare this as @transient lazy as we are using it in the streaming context
    * and the scala Random is not re-entrant
    */
-  @transient lazy val r = scala.util.Random
+  //@transient lazy val r = scala.util.Random
 
   /*
    * Get runtime properties from application.conf
@@ -122,6 +121,7 @@ object TransactionConsumer extends App {
           //
           // In a real app this sould need to be updated to include more evaluation rules.
           //
+          val r = new Random()
           val status = if (!initStatus.equalsIgnoreCase("CHECK")) {
             initStatus
           } else if (r.nextInt(100) < (pctTransactionToDecline * 100).toInt) {
