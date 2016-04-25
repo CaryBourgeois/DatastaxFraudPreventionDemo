@@ -125,9 +125,9 @@ object TransactionConsumer extends App {
           val status = if (!initStatus.equalsIgnoreCase("CHECK")) {
             initStatus
           } else if (r.nextInt(100) < (pctTransactionToDecline * 100).toInt) {
-            s"APPROVED"
-          } else {
             s"DECLINED"
+          } else {
+            s"APPROVED"
           }
 
           val date_text = f"$year%04d$month%02d$day%02d"
