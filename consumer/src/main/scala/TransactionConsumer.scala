@@ -121,7 +121,7 @@ object TransactionConsumer extends App {
           //
           // In a real app this sould need to be updated to include more evaluation rules.
           //
-          val r = scala.util.Random
+          @transient lazy val r = scala.util.Random
           val status = if (!initStatus.equalsIgnoreCase("CHECK")) {
             initStatus
           } else if (r.nextInt(100) < (pctTransactionToDecline * 100).toInt) {
