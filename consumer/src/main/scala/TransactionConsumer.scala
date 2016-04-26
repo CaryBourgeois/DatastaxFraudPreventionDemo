@@ -122,10 +122,6 @@ object TransactionConsumer extends App {
           //
           val initStatus = payload(9).toInt
           val status = if (initStatus < 5) s"REJECTED" else s"APPROVED"
-//            status = s"DECLINED"
-//          } else {
-//            status = s"APPROVED"
-//          }
 
           val date_text = f"$year%04d$month%02d$day%02d"
 
